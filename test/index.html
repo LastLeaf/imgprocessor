@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>LastLeaf/imgprocessor</title>
+	<script type="text/javascript" src="../src/imgprocessor.js"></script>
+</head>
+<body>
+	<div id="wrapper">
+		<img id="img_src">
+		<canvas id="img_dest"></canvas>
+	</div>
+	<script type="text/javascript">
+		var imgSrc = document.getElementById('img_src');
+		imgSrc.onload = function(){
+			var canvas = document.getElementById('img_dest');
+			var w = imgSrc.width;
+			var h = imgSrc.height;
+			canvas.setAttribute('width', w);
+			canvas.setAttribute('height', h);
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(imgSrc, 0, 0, w, h);
+			var imgData = ctx.getImageData(0, 0, w, h);
+			imgprocessor.blur(imgData, 10);
+			ctx.putImageData(imgData, 0, 0);
+		};
+		imgSrc.src = 'test.png';
+	</script>
+</body>
+</html>
