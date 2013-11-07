@@ -272,6 +272,47 @@ window.imgprocessor = (function(){
 		noiceAdd(data, map);
 	};
 
+	// mirror
+	var mirror = function(imgData, isVertical){
+		var data = imgData.data, width = imgData.width, height = imgData.height;
+		if(isVertical)
+			for(var i=Math.floor(height/2)-1; i>=0; i--)
+				for(var j=width-1; j>=0; j--) {
+					var a = (i*width+j)*4;
+					var b = ((height-1-i)*width+j)*4;
+					var t = data[a];
+					data[a] = data[b];
+					data[b] = t;
+					t = data[a+1];
+					data[a+1] = data[b+1];
+					data[b+1] = t;
+					t = data[a+2];
+					data[a+2] = data[b+2];
+					data[b+2] = t;
+					t = data[a+3];
+					data[a+3] = data[b+3];
+					data[b+3] = t;
+				}
+		else
+			for(var i=height-1; i>=0; i--)
+				for(var j=Math.floor(width/2)-1; j>=0; j--) {
+					var a = (i*width+j)*4;
+					var b = (i*width+(width-1-j))*4;
+					var t = data[a];
+					data[a] = data[b];
+					data[b] = t;
+					t = data[a+1];
+					data[a+1] = data[b+1];
+					data[b+1] = t;
+					t = data[a+2];
+					data[a+2] = data[b+2];
+					data[b+2] = t;
+					t = data[a+3];
+					data[a+3] = data[b+3];
+					data[b+3] = t;
+				}
+	};
+
 	// emboss
 	var emboss = function(imgData, depth){
 		var data = imgData.data, width = imgData.width, height = imgData.height;
@@ -289,24 +330,24 @@ window.imgprocessor = (function(){
 			}
 	};
 
-	// gauss blur
-	var blur = function(imgData, strength){
-		var data = imgData.data, width = imgData.width, height = imgData.height;
-		var r2 = strength;
+	// generate guassian distribution
+	var guassianDistribution = function(r2, rmax){
 		var PI = Math.PI;
 		// calc max ratio
-		var rmax = 1;
-		for(; rmax<width && rmax<height; rmax++) {
-			if(Math.exp(-rmax*rmax/(2*r2)) / (2*PI*r2) < 1/256)
+		var r = 1;
+		var min = 1/256 / (2*PI*r2);
+		for(; r<=rmax; r++) {
+			if(Math.exp(-r*r/(2*r2)) / (2*PI*r2) < min*(r*2-1)*(r*2-1))
 				break;
 		}
-		rmax--;
+		r--;
+		console.log(r);
 		// generate guass
-		var pds = rmax*2+1;
+		var pds = r*2+1;
 		var pd = new Float32Array(pds*pds);
-		for(var i=-rmax; i<=rmax; i++)
-			for(var j=-rmax; j<=rmax; j++) {
-				var cur = (i+rmax)*pds + (j+rmax);
+		for(var i=-r; i<=r; i++)
+			for(var j=-r; j<=r; j++) {
+				var cur = (i+r)*pds + (j+r);
 				pd[cur] = Math.exp(-(i*i+j*j)/(2*r2)) / (2*PI*r2);
 			}
 		var s = 0;
@@ -314,6 +355,20 @@ window.imgprocessor = (function(){
 			s += pd[i];
 		for(var i=0; i<pd.length; i++)
 			pd[i] /= s;
+		return {
+			r: r,
+			size: pds,
+			data: pd
+		};
+	};
+
+	// gauss blur
+	var blur = function(imgData, strength){
+		var data = imgData.data, width = imgData.width, height = imgData.height;
+		var gd = guassianDistribution(strength, (width>height?width:height));
+		var rmax = gd.r;
+		var size = gd.size;
+		var pd = gd.data;
 		// blur
 		var blurColor = function(c){
 			var t = new Uint32Array(width*height);
@@ -325,7 +380,7 @@ window.imgprocessor = (function(){
 					data[dest] = 0;
 					for(var y=-rmax; y<=rmax; y++)
 						for(var x=-rmax; x<=rmax; x++) {
-							var cur = (y+rmax)*pds + (x+rmax);
+							var cur = (y+rmax)*size + (x+rmax);
 							if(i+y < 0 || i+y >= height || j+x < 0 || j+x >= width)
 								var src = i*width+j;
 							else
@@ -339,9 +394,83 @@ window.imgprocessor = (function(){
 		blurColor(2);
 	};
 
-	// shapen
+	// gauss shapen
+	var shapen = function(imgData, strength){
+		var data = imgData.data, width = imgData.width, height = imgData.height;
+		var gd = guassianDistribution(strength, (width>height?width:height));
+		var rmax = gd.r;
+		var size = gd.size;
+		var pd = gd.data;
+		// blur
+		var shapenColor = function(c){
+			var t = new Uint32Array(width*height);
+			for(var i=c, j=0; j<t.length; i+=4, j++)
+				t[j] = data[i];
+			for(var i=0; i<height; i++)
+				for(var j=0; j<width; j++) {
+					var dest = (i*width+j)*4+c;
+					var r = data[dest]*2;
+					for(var y=-rmax; y<=rmax; y++)
+						for(var x=-rmax; x<=rmax; x++) {
+							var cur = (y+rmax)*size + (x+rmax);
+							if(i+y < 0 || i+y >= height || j+x < 0 || j+x >= width)
+								var src = i*width+j;
+							else
+								var src = (i+y)*width + (j+x);
+							r -= pd[cur]*t[src];
+						}
+					data[dest] = r;
+				}
+		};
+		shapenColor(0);
+		shapenColor(1);
+		shapenColor(2);
+	};
+
 	// mozaic
-	// mirror
+	var mozaic = function(imgData, size){
+		var data = imgData.data, width = imgData.width, height = imgData.height;
+		var left = Math.floor(width%size/2);
+		if(width < size) left = width;
+		var top = Math.floor(height%size/2);
+		if(height < size) top = height;
+		// mean value function for area
+		var mean = function(l, t, w, h){
+			if(w <= 0 || h <= 0) return;
+			var r=0, g=0, b=0, a=0;
+			for(var i=0; i<h; i++)
+				for(var j=0; j<w; j++) {
+					var cur = ((i+t)*width + (j+l)) * 4;
+					r += data[cur];
+					g += data[cur+1];
+					b += data[cur+2];
+					a += data[cur+3];
+				}
+			r /= w*h;
+			g /= w*h;
+			b /= w*h;
+			a /= w*h;
+			for(var i=0; i<h; i++)
+				for(var j=0; j<w; j++) {
+					var cur = ((i+t)*width + (j+l)) * 4;
+					data[cur] = r;
+					data[cur+1] = g;
+					data[cur+2] = b;
+					data[cur+3] = a;
+				}
+		};
+		// calc areas
+		var calcRow = function(t, h){
+			mean(0, t, left, h);
+			for(var j=left; j<width-size; j+=size)
+				mean(j, t, size, h);
+			mean(j, t, width-j, h);
+		};
+		calcRow(0, top);
+		for(var i=top; i<height-size; i+=size)
+			calcRow(i, size);
+		calcRow(i, height-i);
+	};
 
 	return {
 		revert: revert,
@@ -358,8 +487,11 @@ window.imgprocessor = (function(){
 		noiceGauss: noiceGauss,
 		noiceUniform: noiceUniform,
 		noiceTwoValue: noiceTwoValue,
+		mirror: mirror,
 		emboss: emboss,
-		blur: blur
+		blur: blur,
+		shapen: shapen,
+		mozaic: mozaic
 	};
 })();
 

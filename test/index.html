@@ -21,7 +21,7 @@
 			var ctx = canvas.getContext('2d');
 			ctx.drawImage(imgSrc, 0, 0, w, h);
 			var imgData = ctx.getImageData(0, 0, w, h);
-			imgprocessor.blur(imgData, 10);
+			imgprocessor.mozaic(imgData, 10);
 			ctx.putImageData(imgData, 0, 0);
 		};
 		imgSrc.src = 'test.png';
