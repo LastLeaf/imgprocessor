@@ -3,26 +3,104 @@
 <head>
 	<meta charset="UTF-8">
 	<title>LastLeaf/imgprocessor</title>
+	<style>
+		body { margin: 0; background: #606060; color: #fff; text-align: center;}
+		input, select { vertical-align: middle; }
+		.title { background: #101010; padding: 40px 0 10px; margin-bottom: 30px; box-shadow: 0 0 10px #000; }
+		.title h1 { margin-top: 0; }
+		#img_src, #img_dest { display: inline-block; margin: 10px; box-shadow: 0 0 10px #000; }
+		#img_src { max-width: 45%; vertical-align: top; }
+		#img_dest canvas { width: 100%; height: 100%; }
+		#code { font-size: 0.85em; color: #c0c0c0; }
+		#code i { color: #808080; }
+	</style>
 	<script type="text/javascript" src="src/imgprocessor_algorithm.js" imgprocessor-worker></script>
 	<script type="text/javascript" src="src/imgprocessor.js"></script>
 </head>
 <body>
+
 	<div id="wrapper">
-		<img id="img_src" src="test.png">
+		<div class="title">
+			<h1>imgprocessor - An HTML5 Image Processing Library</h1>
+			<p><pre><code id="code"></code></pre></p>
+		</div>
+		<p>
+			Load an image from local drive <input type="file" id="file_local" accept="image/*">
+			Algorithm
+			<select id="algo">
+				<option value="monochrome" default>monochrome</option>
+				<option value="brightness" min="-128" max="128" def="0">brightness</option>
+				<option value="contrast" min="0" max="200" mul="100" def="100">contrast</option>
+				<option value="gammaCorrection" min="1" max="40" mul="10" def="10">gamma correction</option>
+				<option value="histogramEqualization" default>histogram equalization</option>
+				<option value="shapen" min="1" max="100" mul="10" def="10">shapen</option>
+				<option value="blur" min="1" max="100" mul="10" def="10">blur</option>
+				<option value="revert">revert</option>
+				<option value="emboss" min="1" max="3" def="1">emboss</option>
+				<option value="mozaic" min="1" max="100" def="10">mozaic</option>
+				<option value="mirror" min="0" max="1" def="0">mirror</option>
+				<option value="noiceGauss" min="0" max="200" def="50">noice (gauss)</option>
+				<option value="noiceUniform" min="0" max="200" def="50">noice (uniform)</option>
+				<option value="noiceTwoValue" min="0" max="200" def="50">noice (two value)</option>
+				<option value="extractRed">extract red</option>
+				<option value="extractGreen">extract green</option>
+				<option value="extractBlue">extract blue</option>
+			</select>
+			<input type="range" id="arg" min="0" max="0" value="0" mul="1">
+		</p>
+		<p id="imgs"><img id="img_src" src="test.png"><span id="img_dest"></span></p>
 	</div>
+
+	<a href="https://github.com/lastleaf/imgprocessor"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
+
 	<script type="text/javascript">
-		var proc = imgprocessor('test.png').revert().toImage(function(img){
-			document.getElementById('wrapper').appendChild(img);
-		}).revert().exec();
-		var a = new Date().getTime();
-		proc.blur(10).blur(10).blur(10).blur(10).blur(10).exec(function(){
-			alert(new Date().getTime()-a);
-		});
-		proc.toCanvas(function(canvas){
-			document.getElementById('wrapper').appendChild(canvas);
-		}).monochrome().toImage(function(img){
-			document.getElementById('wrapper').appendChild(img);
-		});
+		// update result image
+		var src = document.getElementById('img_src');
+		var dest = document.getElementById('img_dest');
+		var algo = document.getElementById('algo');
+		var arg = document.getElementById('arg');
+		var code = document.getElementById('code');
+		var updateResult = function(){
+			dest.style.width = src.clientWidth + 'px';
+			dest.style.height = src.clientHeight + 'px';
+			dest.innerHTML = '';
+			var argVal = '';
+			if(Number(arg.getAttribute('min')) !== Number(arg.getAttribute('max')))
+				argVal = arg.value / Number(arg.getAttribute('mul'));
+			arg.setAttribute('title', argVal);
+			code.innerHTML = 'imgprocessor( <i>sourceImage</i> ).'+algo.value+'('+argVal+').toCanvas(function( <i>processedImage</i> ){ <i>...</i> });';
+			var proc = imgprocessor(src)[algo.value](argVal).toCanvas(function(img){
+				dest.appendChild(img);
+			});
+		};
+		// read image from local file
+		var local = document.getElementById('file_local');
+		local.onchange = function(){
+			var file = local.files[0];
+			src.onload = updateResult;
+			src.src = URL.createObjectURL(file);
+		};
+		// control algorithm and options
+		var setArgRange = function(){
+			var options = algo.childNodes;
+			for(var i=0; i<options.length; i++) {
+				var option = options[i];
+				if(option.tagName !== 'OPTION' || option.getAttribute('value') !== algo.value) continue;
+				arg.setAttribute('min', option.getAttribute('min') || 0);
+				arg.setAttribute('max', option.getAttribute('max') || 0);
+				arg.setAttribute('mul', option.getAttribute('mul') || 1);
+				arg.value = Number(option.getAttribute('def')) || 0;
+				if(Number(arg.getAttribute('min')) === Number(arg.getAttribute('max')))
+					arg.style.visibility = 'hidden';
+				else
+					arg.style.visibility = 'visible';
+				break;
+			}
+			updateResult();
+		};
+		algo.onchange = setArgRange;
+		arg.onchange = updateResult;
+		src.onload = setArgRange;
 	</script>
 </body>
 </html>

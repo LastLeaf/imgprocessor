@@ -13,8 +13,8 @@ var algorithm = (function(){
 		}
 	};
 
-	// seperate red
-	var seperateRed = function(imgData) {
+	// extract red
+	var extractRed = function(imgData) {
 		var data = imgData.data;
 		for(var i=0; i<data.length; i+=4) {
 			data[i+1] = 0;
@@ -22,8 +22,8 @@ var algorithm = (function(){
 		}
 	};
 
-	// seperate green
-	var seperateGreen = function(imgData) {
+	// extract green
+	var extractGreen = function(imgData) {
 		var data = imgData.data;
 		for(var i=0; i<data.length; i+=4) {
 			data[i] = 0;
@@ -31,8 +31,8 @@ var algorithm = (function(){
 		}
 	};
 
-	// seperate blue
-	var seperateBlue = function(imgData) {
+	// extract blue
+	var extractBlue = function(imgData) {
 		var data = imgData.data;
 		for(var i=0; i<data.length; i+=4) {
 			data[i] = 0;
@@ -51,15 +51,13 @@ var algorithm = (function(){
 		}
 	}
 
-	// greyness
+	// greyness (private)
 	var setGrey = function(imgData, func){
-		var data = imgData.data, width = imgData.width, height = imgData.height;
-		var count = width*height;
-		var y=0, u=0, v=0;
+		var data = imgData.data;
 		for(var i=0; i<data.length; i+=4) {
-			y = 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
-			u = 0.492*(data[i+2]-y[j]);
-			v = 0.877*(data[i]-y[j]);
+			var y = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+			var u = 0.492*(data[i+2]-y);
+			var v = 0.877*(data[i]-y);
 			y = func(y);
 			data[i]   = y+1.140*v;
 			data[i+1] = y-0.395*u-0.581*v;
@@ -73,6 +71,7 @@ var algorithm = (function(){
 			y += inc;
 			if(y > 255) y = 255;
 			if(y < 0) y = 0;
+			return y;
 		});
 	};
 
@@ -82,14 +81,14 @@ var algorithm = (function(){
 			y = Math.round((y-128)*mul+128);
 			if(y > 255) y = 255;
 			if(y < 0) y = 0;
+			return y;
 		});
 	};
 
     // gamma correction
     var gammaCorrection = function(imgData, ratio){
 		var data = imgData.data;
-    	if(!ratio) ratio = 1;
-    	var m = 10/ratio;
+    	var m = ratio || 1;
 		for(var i=0; i<data.length; i+=4) {
 			data[i] = Math.pow(data[i]/256, m) * 256;
 			data[i+1] = Math.pow(data[i+1]/256, m) * 256;
@@ -105,8 +104,8 @@ var algorithm = (function(){
 		var u = new Float32Array(count);
 		var v = new Float32Array(count);
 		var percent = new Float32Array(256);
-		var index = new uint32Array(256);
-		var map = new uint32Array(256);
+		var index = new Uint32Array(256);
+		var map = new Uint32Array(256);
 		for(var i=0,j=0;i<data.length;i+=4,j++) {
 			y[j] = 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
 			u[j] = 0.492*(data[i+2]-y[j]);
@@ -129,7 +128,7 @@ var algorithm = (function(){
 		}
 	};
 
-	// noice adder
+	// noice adder (private)
 	var noiceAdd = function(data, map) {
 		var count = data.length/4;
 		var Y = new Float32Array(count);
@@ -264,7 +263,7 @@ var algorithm = (function(){
 			}
 	};
 
-	// generate guassian distribution
+	// generate guassian distribution (private)
 	var guassianDistribution = function(r2, rmax){
 		var PI = Math.PI;
 		// calc max ratio
@@ -407,9 +406,9 @@ var algorithm = (function(){
 
 	return {
 		revert: revert,
-		seperateRed: seperateRed,
-		seperateGreen: seperateGreen,
-		seperateBlue: seperateBlue,
+		extractRed: extractRed,
+		extractGreen: extractGreen,
+		extractBlue: extractBlue,
 		monochrome: monochrome,
 		brightness: brightness,
 		contrast: contrast,
