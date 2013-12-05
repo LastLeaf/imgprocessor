@@ -28,10 +28,10 @@ imgprocessor('text.png').blur(2).mirror().toCanvas(function(canvas){
 Core API
 ========
 
-* `imgprocessor(_sourceImage_)` create an imgprocessor object. The _sourceImage_ can be an URL, <canvas>, <img>, or [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) object read from canvas.
-* `.exec(_function(imageData){...}_)` run pending operations and call the callback function (if given). The callback function receives an ImageData object that can be put into canvases. Normally you should not modify the imageData.
-* `.toCanvas(_function(img){...}_)` run pending operations and generate an <canvas>.
-* `.toImage(_function(img){...}_)` run pending operations and generate an <img>. Currently, some browsers do not support it, so use `.toCanvas()` if possible.
+* `imgprocessor( sourceImage )` create an imgprocessor object. The sourceImage can be an URL, <canvas>, <img>, or [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) object read from canvas.
+* `.exec( function(imageData){...} )` run pending operations and call the callback function (if given). The callback function receives an ImageData object that can be put into canvases. Normally you should not modify the imageData.
+* `.toCanvas( function(img){...} )` run pending operations and generate an <canvas>.
+* `.toImage( function(img){...} )` run pending operations and generate an <img>. Currently, some browsers do not support it, so use `.toCanvas()` if possible.
 
 
 Algorithm API
@@ -44,18 +44,18 @@ The algorithm functions accepts at most 1 argument. Try the [demo](http://lastle
 * `.extractGreen()`
 * `.extractBlue()`
 * `.monochrome()`
-* `.brightness(_addValue_)`
-* `.contrast(_multiplyValue_)`
-* `.gammaCorrection(_gamma_)`
+* `.brightness( addValue )`
+* `.contrast( multiplyValue )`
+* `.gammaCorrection( gamma )`
 * `.histogramEqualization()`
-* `.noiceGauss(_strength_)`
-* `.noiceUniform(_strength_)`
-* `.noiceTwoValue(_strength_)`
-* `.mirror(_isVertical_)`
-* `.emboss(_depth_)`
-* `.blur(_strength_)`
-* `.shapen(_strength_)`
-* `.mozaic(_blockSize_)`
+* `.noiceGauss( strength )`
+* `.noiceUniform( strength )`
+* `.noiceTwoValue( strength )`
+* `.mirror( isVertical )`
+* `.emboss( depth )`
+* `.blur( strength )`
+* `.shapen( strength )`
+* `.mozaic( blockSize )`
 
 
 LICENSE
