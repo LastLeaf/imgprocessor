@@ -28,10 +28,10 @@ imgprocessor('text.png').blur(2).mirror().toCanvas(function(canvas){
 Core API
 ========
 
-* `imgprocessor( sourceImage )` create an imgprocessor object. The sourceImage can be an URL, <canvas>, <img>, or [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) object read from canvas.
+* `imgprocessor( sourceImage )` create an imgprocessor object. The sourceImage can be an URL, &lt;canvas&gt;, &lt;img&gt;, or [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) object read from canvas.
 * `.exec( function(imageData){...} )` run pending operations and call the callback function (if given). The callback function receives an ImageData object that can be put into canvases. Normally you should not modify the imageData.
-* `.toCanvas( function(img){...} )` run pending operations and generate an <canvas>.
-* `.toImage( function(img){...} )` run pending operations and generate an <img>. Currently, some browsers do not support it, so use `.toCanvas()` if possible.
+* `.toCanvas( function(img){...} )` run pending operations and generate an &lt;canvas&gt;.
+* `.toImage( function(img){...} )` run pending operations and generate an &lt;img&gt;. Currently, some browsers do not support it, so use `.toCanvas()` if possible.
 
 
 Algorithm API
