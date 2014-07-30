@@ -1,5 +1,6 @@
 // Copyright (c) 2013 LastLeaf, MIT License, https://github.com/LastLeaf/imgprocessor
 'use strict';
+(function(global){
 
 var algorithm = (function(){
 
@@ -425,7 +426,7 @@ var algorithm = (function(){
 	};
 })();
 
-if(typeof(this.document) !== 'undefined') {
+if(typeof(global.document) !== 'undefined') {
 	// directly embeded
 	window.imgprocessorAlgorithm = algorithm;
 } else {
@@ -438,3 +439,5 @@ if(typeof(this.document) !== 'undefined') {
 		postMessage(msg.data, [msg.data.data.buffer]);
 	};
 }
+
+})(this);

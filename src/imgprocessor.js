@@ -1,5 +1,6 @@
 // Copyright (c) 2013 LastLeaf, MIT License, https://github.com/LastLeaf/imgprocessor
 'use strict';
+(function(global){
 
 // try web workers
 var USE_WEB_WORKERS = false;
@@ -28,7 +29,7 @@ if(Worker) {
 // define prototype
 var ImgProcessor = function(){};
 var processor = ImgProcessor.prototype;
-window.imgprocessor = function(image){
+global.imgprocessor = function(image){
 	var obj = new ImgProcessor();
 	obj.pending = [];
 	obj.working = [];
@@ -126,7 +127,7 @@ for(var k in imgprocessorAlgorithm) {
 				args.push(arguments[i]);
 			addPending(this, function(doneFunc){
 				args.unshift(this.imgData);
-				imgprocessorAlgorithm[k].apply(window, args);
+				imgprocessorAlgorithm[k].apply(global, args);
 				doneFunc();
 			});
 			return this;
@@ -210,3 +211,5 @@ processor.toImage = function(callback){
 	doPending(this);
 	return this;
 };
+
+})(this);
